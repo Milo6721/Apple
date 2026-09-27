@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apple Unnovation</title>
+<link rel="icon" type="image/png" href="icon.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #000; color: #f5f5f7; overflow-x: hidden;
+  }
+  img.err { display:none; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    height: 48px; background: rgba(0,0,0,0.82); backdrop-filter: blur(20px);
+    display: flex; align-items: center; justify-content: center; gap: 34px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .nav-logo { width: 24px; height: 28px; }
+  .nav-logo svg { width: 100%; height: 100%; fill: #f5f5f7; }
+  nav a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 12px; cursor:pointer; transition: color .2s; }
+  nav a:hover { color: #fff; }
+
+  /* TOAST (efekt kliknięcia) */
+  #toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(30px) scale(.92);
+    background: rgba(30,30,34,.92); backdrop-filter: blur(20px); color: #fff; padding: 14px 22px;
+    border-radius: 16px; font-size: 13.5px; z-index: 999; opacity: 0; pointer-events: none;
+    transition: all .4s cubic-bezier(.19,1,.22,1); box-shadow: 0 20px 50px rgba(0,0,0,.5);
+    border: 1px solid rgba(255,255,255,.1); max-width: 340px; display: flex; align-items: center; gap: 10px;
+  }
+  #toast.pokaz { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  #toast .toast-ikona {
+    width: 26px; height: 26px; border-radius: 50%; background: #0071e3; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #toast .toast-ikona svg { width: 14px; height: 14px; }
+  #toast .toast-tekst { line-height: 1.4; }
+
+  /* HERO */
+  .hero {
+    min-height: 92vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 140px 20px 60px; position: relative;
+    background: radial-gradient(ellipse at 50% -10%, #1e1e22 0%, #000 65%);
+    overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; width: 700px; height: 700px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(120,80,255,0.18), transparent 70%);
+    top: -300px; left: 50%; transform: translateX(-50%); animation: pulsuj 6s ease-in-out infinite;
+  }
+  @keyframes pulsuj { 0%,100%{ opacity:.6; transform:translateX(-50%) scale(1)} 50%{opacity:1; transform:translateX(-50%) scale(1.15)} }
+  .hero .chip {
+    font-size: 12px; color: #a1a1a6; background: rgba(255,255,255,0.07); padding: 6px 16px;
+    border-radius: 20px; margin-bottom: 20px; z-index: 2; animation: wjazd .8s ease .1s both;
+  }
+  @keyframes wjazd { from{opacity:0; transform:translateY(14px)} to{opacity:1; transform:translateY(0)} }
+  .hero h1 {
+    font-size: clamp(44px, 8vw, 92px); font-weight: 700; line-height: 1.03; z-index:2;
+    background: linear-gradient(180deg, #fff 30%, #a78bfa 120%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: -0.03em; animation: wjazd .8s ease .2s both;
+  }
+  .hero .sub { font-size: clamp(18px,2.4vw,25px); color: #a1a1a6; margin-top: 16px; max-width: 600px; z-index:2; animation: wjazd .8s ease .32s both; }
+  .hero .price { font-size: 18px; margin-top: 24px; z-index:2; animation: wjazd .8s ease .42s both; }
+  .hero .price span { color: #6e6e73; font-size: 12.5px; display:block; margin-top:4px; }
+  .btn-row { display:flex; gap: 14px; margin-top: 28px; z-index:2; animation: wjazd .8s ease .52s both; }
+  .btn-blue {
+    background: #0071e3; color: white; padding: 11px 24px; border-radius: 980px; font-size: 14px;
+    cursor: pointer; border: none; transition: all .2s; font-family:inherit;
+  }
+  .btn-blue:hover { background: #0077ed; transform: scale(1.03); }
+  .btn-blue:active { transform: scale(.96); }
+  .btn-ghost { color: #2997ff; padding: 11px 6px; font-size: 14px; cursor: pointer; background:none; border:none; font-family:inherit; }
+  .btn-ghost:hover { text-decoration: underline; }
+  .hero-visual { margin-top: 50px; width: min(320px, 70vw); z-index:2; animation: wjazd 1s ease .6s both; }
+  .hero-foto img { width: 100%; border-radius: 24px; box-shadow: 0 40px 80px rgba(0,0,0,.6); display: block; }
+
+  /* SEKCJA PRODUKTU */
+  .produkt { padding: 96px 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.06); position:relative; overflow:hidden; }
+  .produkt.jasna { background: #f5f5f7; color: #1d1d1f; }
+  .produkt .eyebrow { color: #0071e3; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .produkt h2 { font-size: clamp(30px, 4.4vw, 50px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.06; margin-bottom: 14px; }
+  .produkt p.desc { color: #86868b; font-size: 17px; max-width: 580px; margin: 0 auto 36px; line-height: 1.55; }
+
+  /* pozioma karuzela produktu */
+  .wizual-pozioma {
+    display: flex; align-items: center; justify-content: center; gap: 30px; flex-wrap: wrap; max-width: 900px; margin: 0 auto;
+  }
+  .karta-wizual {
+    width: 250px; height: 340px; border-radius: 32px; display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(150deg, #2c2c2e, #141416); position: relative; overflow: hidden;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.5), 0 10px 24px rgba(0,0,0,.3); transition: transform .4s ease;
+  }
+  .karta-wizual:hover { transform: translateY(-10px) rotate(-1deg); }
+  .produkt.jasna .karta-wizual { background: linear-gradient(150deg, #eceef1, #d7d9de); box-shadow: 0 30px 70px rgba(0,0,0,0.18), 0 10px 24px rgba(0,0,0,.1); }
+  .karta-wizual .shine {
+    position:absolute; inset:-50%; background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.12), transparent 30%);
+    animation: obrot 6s linear infinite;
+  }
+  @keyframes obrot { to { transform: rotate(360deg) } }
+  .karta-wizual svg { width: 70%; z-index:2; filter: drop-shadow(0 14px 26px rgba(0,0,0,.4)); }
+
+  .karta-foto { padding: 0; }
+  .karta-foto img { width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+  .karta-foto .etyk {
+    position: absolute; bottom: 10px; left: 10px; right: 10px; z-index: 3;
+    font-size: 9.5px; color: #d8d8dc; background: rgba(0,0,0,.55); padding: 4px 9px;
+    border-radius: 8px; text-align: left; backdrop-filter: blur(4px);
+  }
+  .karta-szeroka { width: min(560px, 90vw); }
+  .karta-wizual .etyk { position:absolute; bottom:14px; z-index:3; font-size:11px; color:#a1a1a6; background:rgba(0,0,0,.4); padding:3px 10px; border-radius:10px; }
+
+  .produkt .cena-tag {
+    display: inline-flex; align-items:center; gap:8px; margin-top: 34px; background: rgba(255,255,255,0.08);
+    padding: 10px 20px; border-radius: 980px; font-size: 14.5px; font-weight: 500; cursor: pointer; border:none; color:inherit; font-family:inherit;
+    transition: all .2s;
+  }
+  .produkt .cena-tag:hover { background: rgba(255,255,255,0.14); transform: scale(1.02); }
+  .produkt.jasna .cena-tag { background: rgba(0,0,0,0.06); }
+  .produkt.jasna .cena-tag:hover { background: rgba(0,0,0,0.1); }
+  .produkt .cena-tag b { color: #0071e3; }
+
+  /* AJAI sekcja specjalna */
+  .ajai {
+    padding: 110px 20px; text-align:center; background: radial-gradient(ellipse at 50% 30%, #1a1030, #000 70%);
+    border-top: 1px solid rgba(255,255,255,0.06); position:relative; overflow:hidden;
+  }
+  .ajai-orb {
+    width: 130px; height: 130px; margin: 0 auto 36px; border-radius: 50%;
+    background: conic-gradient(from 0deg, #a78bfa, #60a5fa, #f472b6, #a78bfa);
+    animation: krec 5s linear infinite; position: relative; filter: blur(0.4px);
+    box-shadow: 0 0 60px rgba(167,139,250,.5);
+  }
+  .ajai-orb::after { content:''; position:absolute; inset: 14px; border-radius:50%; background:#000; }
+  @keyframes krec { to { transform: rotate(360deg) } }
+  .ajai .eyebrow { color: #a78bfa; font-size:16px; font-weight:600; margin-bottom:10px; }
+  .ajai h2 { font-size: clamp(32px,5vw,58px); font-weight:700; letter-spacing:-.02em; margin-bottom:16px; }
+  .ajai p { color:#a1a1a6; font-size:18px; max-width:600px; margin:0 auto 30px; line-height:1.55; }
+  .ajai-chat {
+    max-width: 460px; margin: 0 auto; background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,.1);
+    border-radius: 20px; padding: 18px; text-align:left; backdrop-filter: blur(10px);
+  }
+  .ajai-msg { font-size:13.5px; padding:10px 14px; border-radius:14px; margin-bottom:10px; max-width:80%; }
+  .ajai-msg.user { background:#0071e3; color:white; margin-left:auto; border-bottom-right-radius:4px; }
+  .ajai-msg.ai { background: rgba(255,255,255,.08); border-bottom-left-radius:4px; }
+
+  /* FUNKCJE */
+  .funkcje { padding: 90px 20px; background: #000; border-top: 1px solid rgba(255,255,255,0.06); }
+  .funkcje h2 { text-align:center; font-size: clamp(28px,3.8vw,42px); font-weight:700; margin-bottom: 54px; letter-spacing:-0.02em; }
+  .grid-f { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1px; max-width: 1100px; margin: 0 auto; background: rgba(255,255,255,0.06); }
+  .karta-f { background: #0d0d0d; padding: 38px 28px; transition: background .25s; cursor:default; }
+  .karta-f:hover { background: #151515; }
+  .karta-f .ikon { width: 30px; height: 30px; margin-bottom: 16px; opacity: .9; }
+  .karta-f .ikon svg { width: 100%; height: 100%; }
+  .karta-f h3 { font-size: 19px; font-weight: 600; margin-bottom: 10px; }
+  .karta-f p { color: #86868b; font-size: 14px; line-height: 1.6; }
+  .karta-f .tag-cena { display:inline-block; margin-top:14px; font-size:11px; background:rgba(255,255,255,0.08); padding:4px 10px; border-radius:20px; }
+
+  /* PORÓWNAJ */
+  .porownaj { padding: 90px 20px; background: #f5f5f7; color:#1d1d1f; }
+  .porownaj h2 { text-align:center; font-size: clamp(28px,3.8vw,42px); font-weight:700; margin-bottom: 8px; }
+  .porownaj .sub { text-align:center; color:#86868b; font-size:16px; margin-bottom: 44px; }
+  table { width: 100%; max-width: 760px; margin: 0 auto; border-collapse: collapse; font-size: 13.5px; }
+  th, td { padding: 15px 14px; text-align: center; border-bottom: 1px solid #d2d2d7; }
+  th { font-weight: 600; font-size: 14px; }
+  td:first-child, th:first-child { text-align:left; color:#6e6e73; }
+  td b { color: #0071e3; }
+  .zly { color: #ff3b30; font-size: 11.5px; }
+
+  footer { background: #f5f5f7; color: #6e6e73; padding: 40px 20px 60px; font-size: 11.5px; text-align:center; border-top: 1px solid #d2d2d7; }
+  footer .gwiazdki { max-width: 640px; margin: 0 auto 26px; line-height:1.7; text-align:left; opacity:.8; }
+  footer .marka-wrap { display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:6px; }
+  footer .marka-wrap .nav-logo svg { fill: #1d1d1f; }
+  footer .marka { font-size:13px; color:#1d1d1f; font-weight:600; }
+
+  .ajai-title-row { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:16px; }
+  .ajai-logo { width: 34px !important; height: 40px !important; }
+  .ajai-logo svg { fill: #f5f5f7; }
+  footer .marka-wrap .nav-logo { width: 20px; height: 23px; }
+  .eyebrow-logo { display:inline-flex; align-items:center; gap:7px; }
+  .eyebrow-logo .nav-logo { width:20px; height:23px; }
+  .eyebrow-logo .nav-logo svg { fill: #0071e3; }
+
+  ::selection { background: #0071e3; color: white; }
+
+  /* ===== IKONA KOSZYKA (stały przycisk w navbarze) ===== */
+  .cart-btn {
+    position: relative; background: none; border: none; cursor: pointer; padding: 6px;
+    display: flex; align-items: center; color: #f5f5f7; margin-left: 4px;
+  }
+  .cart-btn svg { width: 17px; height: 17px; }
+  .cart-count {
+    position: absolute; top: -3px; right: -5px; background: #0071e3; color: white;
+    font-size: 10px; font-weight: 700; width: 16px; height: 16px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; transition: transform .2s;
+  }
+  .cart-count.pop { animation: countPop .35s ease; }
+  @keyframes countPop { 0%{transform:scale(1)} 40%{transform:scale(1.5)} 100%{transform:scale(1)} }
+
+  /* ===== PANEL KOSZYKA (wysuwany z prawej) ===== */
+  #cart-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+    z-index: 500; opacity: 0; pointer-events: none; transition: opacity .3s ease;
+  }
+  #cart-overlay.otwarty { opacity: 1; pointer-events: auto; }
+
+  #cart-panel {
+    position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 92vw);
+    background: #111114; z-index: 501; display: flex; flex-direction: column;
+    transform: translateX(100%); transition: transform .38s cubic-bezier(.19,1,.22,1);
+    box-shadow: -20px 0 60px rgba(0,0,0,.5); color: #f5f5f7;
+  }
+  #cart-panel.otwarty { transform: translateX(0); }
+
+  .cart-head { padding: 22px 22px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .cart-head h3 { font-size: 20px; font-weight: 700; }
+  .cart-close { background:none; border:none; color:#a1a1a6; cursor:pointer; padding:6px; }
+  .cart-close svg { width:18px; height:18px; }
+
+  .cart-body { flex: 1; overflow-y: auto; padding: 16px 22px; }
+  .cart-empty { text-align:center; color:#6e6e73; padding: 60px 10px; font-size: 14px; }
+  .cart-empty svg { width: 44px; height: 44px; margin-bottom: 14px; opacity: .4; }
+
+  .cart-item { display:flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,.06); animation: itemIn .3s ease; }
+  @keyframes itemIn { from{opacity:0; transform:translateX(14px)} to{opacity:1; transform:translateX(0)} }
+  .cart-item-thumb {
+    width: 58px; height: 58px; border-radius: 14px; flex-shrink:0;
+    background: linear-gradient(150deg,#2c2c2e,#141416); display:flex; align-items:center; justify-content:center;
+  }
+  .cart-item-thumb svg { width: 60%; }
+  .cart-item-info { flex: 1; min-width: 0; }
+  .cart-item-info .nazwa { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .cart-item-info .wariant { font-size: 12px; color: #86868b; margin-bottom: 6px; }
+  .cart-item-info .cena { font-size: 13.5px; color: #f5f5f7; font-weight: 500; }
+  .cart-item-info .sub-tag { display:inline-block; font-size:10px; background:rgba(167,139,250,.15); color:#c4b5fd; padding:2px 8px; border-radius:8px; margin-left:6px; }
+  .cart-remove { background:none; border:none; color:#6e6e73; cursor:pointer; align-self:flex-start; padding:4px; transition: color .15s; }
+  .cart-remove:hover { color: #ff3b30; }
+  .cart-remove svg { width:14px; height:14px; }
+
+  /* dodatki / subskrypcje osobno */
+  .cart-addons { margin-top: 6px; }
+  .addon-toggle {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 8px 0; font-size: 12.5px; color: #a1a1a6; cursor:pointer;
+  }
+  .addon-toggle .switch {
+    width: 34px; height: 20px; border-radius: 20px; background: #3a3a3e; position: relative; flex-shrink:0; transition: background .2s;
+  }
+  .addon-toggle .switch::after {
+    content:''; position:absolute; width:16px; height:16px; border-radius:50%; background:#fff; top:2px; left:2px; transition: transform .2s;
+  }
+  .addon-toggle.on .switch { background: #0071e3; }
+  .addon-toggle.on .switch::after { transform: translateX(14px); }
+  .addon-toggle .label b { color: #f5f5f7; }
+
+  .cart-foot { padding: 18px 22px 24px; border-top: 1px solid rgba(255,255,255,.08); }
+  .cart-line { display:flex; justify-content:space-between; font-size: 13px; color:#a1a1a6; margin-bottom: 7px; }
+  .cart-line.total { font-size: 16px; font-weight: 700; color: #f5f5f7; margin-top: 10px; padding-top:12px; border-top:1px solid rgba(255,255,255,.08); }
+  .cart-line.total span:last-child { color: #0071e3; }
+  .cart-checkout-btn {
+    width: 100%; margin-top: 16px; background: #0071e3; color: white; border:none; padding: 14px;
+    border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all .2s; font-family: inherit;
+  }
+  .cart-checkout-btn:hover { background: #0077ed; }
+  .cart-checkout-btn:disabled { background: #2c2c2e; color: #6e6e73; cursor: not-allowed; }
+
+  /* przycisk dodaj-do-koszyka na kartach produktów */
+  .btn-add-cart {
+    display: inline-flex; align-items:center; gap:8px; margin-top: 14px; background: #0071e3; color: white; border:none;
+    padding: 11px 22px; border-radius: 980px; font-size: 14px; cursor: pointer; font-family: inherit; transition: all .2s;
+  }
+  .btn-add-cart:hover { background: #0077ed; transform: scale(1.03); }
+  .btn-add-cart:active { transform: scale(.96); }
+  .btn-add-cart svg { width: 15px; height: 15px; }
+
+  /* wybór wariantu (kolor / rozmiar) pod kartami produktu */
+  .warianty-wybor { display:flex; gap:8px; justify-content:center; margin: 18px 0 6px; flex-wrap:wrap; }
+  .wariant-chip {
+    padding: 7px 16px; border-radius: 980px; font-size: 12.5px; cursor: pointer; border: 1.5px solid rgba(255,255,255,.15);
+    background: transparent; color: #a1a1a6; transition: all .2s; font-family: inherit;
+  }
+  .produkt.jasna .wariant-chip { border-color: rgba(0,0,0,.15); color: #6e6e73; }
+  .wariant-chip.wybrany { border-color: #0071e3; background: rgba(0,113,227,.12); color: #2997ff; }
+
+  /* ===== MODAL PŁATNOŚCI ===== */
+  #pay-overlay {
+    position: fixed; inset:0; background: rgba(0,0,0,.6); backdrop-filter: blur(6px);
+    z-index: 600; display: flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition: opacity .3s;
+  }
+  #pay-overlay.otwarty { opacity:1; pointer-events:auto; }
+  #pay-modal {
+    width: min(440px, 90vw); background: #17171a; border-radius: 22px; padding: 28px;
+    transform: scale(.94) translateY(10px); transition: transform .3s cubic-bezier(.19,1,.22,1); color: #f5f5f7;
+    box-shadow: 0 40px 100px rgba(0,0,0,.6); max-height: 86vh; overflow-y: auto;
+  }
+  #pay-overlay.otwarty #pay-modal { transform: scale(1) translateY(0); }
+  #pay-modal h3 { font-size: 19px; font-weight: 700; margin-bottom: 4px; }
+  #pay-modal .pay-sub { font-size: 12.5px; color: #86868b; margin-bottom: 22px; }
+
+  .bank-lista { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+  .bank-opcja {
+    display: flex; align-items:center; gap: 10px; padding: 12px 14px; border-radius: 13px;
+    border: 1.5px solid rgba(255,255,255,.1); cursor: pointer; transition: all .18s; background: rgba(255,255,255,.02);
+  }
+  .bank-opcja:hover { border-color: rgba(255,255,255,.25); }
+  .bank-opcja.wybrany { border-color: #0071e3; background: rgba(0,113,227,.1); }
+  .bank-logo { width: 34px; height: 34px; border-radius: 8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .bank-logo > div { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .lg-pko { background:#c00a27; color:white; }
+  .lg-pko span { font-size:9px; font-weight:800; line-height:1.1; }
+  .lg-pko .lg-sub { font-size:6px; opacity:.85; }
+  .lg-mbank { background:#000; color:#c8ff33; font-size:19px; font-weight:900; font-style:italic; }
+  .lg-ing { background:#ff6200; font-size:16px; }
+  .lg-santander { background:#ec0000; position:relative; }
+  .lg-santander .lg-flame { width:16px; height:16px; background:white; border-radius:50% 50% 50% 0; transform:rotate(45deg); }
+  .lg-pekao { background:#00447c; color:white; font-size:15px; font-weight:800; }
+  .lg-millennium { background:linear-gradient(135deg,#a30050,#e6007e); color:white; font-size:15px; font-weight:800; }
+  .lg-blik { background:#000; color:white; font-size:8px; font-weight:800; letter-spacing:.3px; }
+  .lg-p24 { background:#e6301e; color:white; font-size:9px; font-weight:800; }
+  .bank-opcja span.nazwa { font-size: 12.5px; font-weight: 500; }
+
+  .pay-summary { background: rgba(255,255,255,.04); border-radius: 14px; padding: 14px 16px; margin-bottom: 20px; }
+  .pay-summary .cart-line { font-size: 12.5px; }
+  .pay-summary .cart-line.total { font-size: 15px; }
+
+  .btn-final-pay {
+    width: 100%; background: #0071e3; color:white; border:none; padding: 15px; border-radius: 14px;
+    font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .2s;
+  }
+  .btn-final-pay:hover { background: #0077ed; }
+  .btn-final-pay:disabled { background: #2c2c2e; color: #6e6e73; cursor: not-allowed; }
+  .pay-close { position: absolute; top: 18px; right: 18px; background:none; border:none; color:#a1a1a6; cursor:pointer; }
+
+  .success-screen { text-align: center; padding: 10px 0; }
+  .success-icon { width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 50%; background: #0071e3; display:flex; align-items:center; justify-content:center; animation: successPop .5s cubic-bezier(.34,1.6,.64,1); }
+  @keyframes successPop { 0%{transform:scale(0)} 60%{transform:scale(1.15)} 100%{transform:scale(1)} }
+  .success-icon svg { width: 30px; height: 30px; }
+  .success-screen h3 { font-size: 20px; margin-bottom: 8px; }
+  .success-screen p { font-size: 13px; color: #86868b; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="metalCzarny" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4a4a4e"/><stop offset="45%" stop-color="#232326"/><stop offset="100%" stop-color="#0c0c0e"/>
+    </linearGradient>
+    <linearGradient id="metalTytan" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ece6d8"/><stop offset="50%" stop-color="#c9c0aa"/><stop offset="100%" stop-color="#a89e86"/>
+    </linearGradient>
+    <linearGradient id="metalNiebieski" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7a9ab8"/><stop offset="50%" stop-color="#41627f"/><stop offset="100%" stop-color="#243a4d"/>
+    </linearGradient>
+    <linearGradient id="ekranSzklo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1a2e"/><stop offset="30%" stop-color="#060608"/><stop offset="100%" stop-color="#000"/>
+    </linearGradient>
+    <linearGradient id="aluBiale" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/><stop offset="60%" stop-color="#e4e4e9"/><stop offset="100%" stop-color="#c4c4cb"/>
+    </linearGradient>
+    <linearGradient id="aluGraf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5a5a5e"/><stop offset="60%" stop-color="#2e2e31"/><stop offset="100%" stop-color="#161618"/>
+    </linearGradient>
+    <radialGradient id="soczewka" cx="35%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#4a5568"/><stop offset="60%" stop-color="#0a0a0c"/><stop offset="100%" stop-color="#000"/>
+    </radialGradient>
+    <linearGradient id="wyspaKamer" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#38383c"/><stop offset="100%" stop-color="#1a1a1c"/>
+    </linearGradient>
+    <radialGradient id="soczewkaBlask" cx="30%" cy="25%" r="40%">
+      <stop offset="0%" stop-color="#8899cc" stop-opacity=".7"/><stop offset="100%" stop-color="#8899cc" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>
+<div id="toast"><div class="toast-ikona"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="toast-tekst" id="toast-tekst"></div></div>
+
+<nav>
+  <div class="nav-logo"><svg viewBox="0 0 24 28"><path d="M17.5 9.3c-1.6 0-2.9 1-3.7 1-.8 0-2-1-3.3-.9-1.7.1-3.3 1-4.1 2.5-1.8 3.1-.5 7.6 1.3 10.1.9 1.2 1.9 2.6 3.3 2.6 1.3-.1 1.8-.9 3.4-.9s2 .9 3.4.9c1.4 0 2.3-1.2 3.1-2.5.6-1 1.1-2.1 1.5-3.3-3.6-1.4-4.2-6.5-.7-8.4-1-1.3-2.5-2.1-4.2-2.1zM14.6 6.6c.7-.9 1.2-2.1 1.1-3.3-1.1.1-2.3.7-3.1 1.6-.7.8-1.2 2-1.1 3.2 1.2.1 2.4-.6 3.1-1.5z"/></svg></div>
+  <a onclick="scrollTo('pTelefon')">iPhone</a>
+  <a onclick="scrollTo('pZegar')">Watch</a>
+  <a onclick="scrollTo('pSluchawki')">AirPods</a>
+  <a onclick="scrollTo('ajai')">Apple AJAI</a>
+  <a onclick="scrollTo('porownaj')">Porównaj</a>
+  <button class="cart-btn" onclick="otworzKoszyk()">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M6 6h15l-1.5 9h-12L5 3H2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="20" r="1.4" fill="currentColor"/><circle cx="18" cy="20" r="1.4" fill="currentColor"/></svg>
+    <span class="cart-count" id="cart-count" style="display:none">0</span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="chip">Apple Unnovation Event · trwa 2h 47min, głównie o kamerze</div>
+  <h1>To jest<br>iPhone Pro.</h1>
+  <p class="sub">Najcieńszy telefon jaki kiedykolwiek zrobiliśmy. Teraz też droższy o kolor.</p>
+  <div class="price">od 9 999 zł<span>albo 416,66 zł / mies. przez 24 miesiące, na zawsze</span></div>
+  <div class="btn-row">
+    <button class="btn-blue" onclick="pokazToast('Dowiadujesz się więcej. Nic się nie zmieniło.')">Dowiedz się więcej</button>
+    <button class="btn-ghost" onclick="pokazToast('🛒 Dodano do koszyka. Ładowarka: osobno.')">Zamów teraz &nbsp;›</button>
+  </div>
+  <div class="hero-visual hero-foto">
+    <img src="https://images.unsplash.com/photo-1616410011236-7a42121dd981?fm=jpg&q=80&w=900&auto=format&fit=crop" alt="iPhone Pro">
+  </div>
+</section>
+
+<!-- iPhone Pro -->
+<section class="produkt" id="pTelefon">
+  <div class="eyebrow eyebrow-logo"><span class="nav-logo"><svg viewBox="0 0 24 28"><path d="M17.5 9.3c-1.6 0-2.9 1-3.7 1-.8 0-2-1-3.3-.9-1.7.1-3.3 1-4.1 2.5-1.8 3.1-.5 7.6 1.3 10.1.9 1.2 1.9 2.6 3.3 2.6 1.3-.1 1.8-.9 3.4-.9s2 .9 3.4.9c1.4 0 2.3-1.2 3.1-2.5.6-1 1.1-2.1 1.5-3.3-3.6-1.4-4.2-6.5-.7-8.4-1-1.3-2.5-2.1-4.2-2.1zM14.6 6.6c.7-.9 1.2-2.1 1.1-3.3-1.1.1-2.3.7-3.1 1.6-.7.8-1.2 2-1.1 3.2 1.2.1 2.4-.6 3.1-1.5z"/></svg></span>iPhone Pro · Apple Unnovation</div>
+  <h2>Teraz w kolorze<br>„Prawie Czarny”.</h2>
+  <p class="desc">Ten sam telefon co w zeszłym roku. Ale port ładowania jest teraz o 0,3mm mniejszy, więc musisz kupić nowy kabel. To jest innowacja.</p>
+  <div class="wizual-pozioma">
+    <div class="karta-wizual karta-foto karta-szeroka">
+      <img src="https://images.unsplash.com/photo-1616410011236-7a42121dd981?fm=jpg&q=80&w=1200&auto=format&fit=crop" alt="iPhone Pro warianty">
+      <span class="etyk">Zdjęcie: Onur Binay / Unsplash</span>
+    </div>
+  </div>
+  <div class="warianty-wybor" id="war-iphone">
+    <button class="wariant-chip wybrany" onclick="wybierzWariant('iphone','Pro',this)">Pro</button>
+    <button class="wariant-chip" onclick="wybierzWariant('iphone','Pro · Tytan',this)">Pro · Tytan</button>
+    <button class="wariant-chip" onclick="wybierzWariant('iphone','Pro Max',this)">Pro Max</button>
+  </div>
+  <button class="btn-add-cart" onclick="dodajDoKoszyka('iphone')">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M6 6h15l-1.5 9h-12L5 3H2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Dodaj do koszyka
+  </button>
+  <div style="margin-top:8px"><button class="cena-tag" onclick="pokazToast('Ładowarka NIE jest w zestawie. To dla planety.')">Od <b>9 999 zł</b> · ładowarka w zestawie: <s>tak</s> nie ›</button></div>
+</section>
+
+<!-- Apple Watch -->
+<section class="produkt jasna" id="pZegar">
+  <div class="eyebrow eyebrow-logo"><span class="nav-logo"><svg viewBox="0 0 24 28"><path d="M17.5 9.3c-1.6 0-2.9 1-3.7 1-.8 0-2-1-3.3-.9-1.7.1-3.3 1-4.1 2.5-1.8 3.1-.5 7.6 1.3 10.1.9 1.2 1.9 2.6 3.3 2.6 1.3-.1 1.8-.9 3.4-.9s2 .9 3.4.9c1.4 0 2.3-1.2 3.1-2.5.6-1 1.1-2.1 1.5-3.3-3.6-1.4-4.2-6.5-.7-8.4-1-1.3-2.5-2.1-4.2-2.1zM14.6 6.6c.7-.9 1.2-2.1 1.1-3.3-1.1.1-2.3.7-3.1 1.6-.7.8-1.2 2-1.1 3.2 1.2.1 2.4-.6 3.1-1.5z"/></svg></span>Apple Watch Ultra · Apple Uninteligence</div>
+  <h2>Powie Ci która<br>godzina. Za 3499 zł.</h2>
+  <p class="desc">Rewolucyjna technologia „Zawsze Włączony Ekran”, którą inne firmy nazywają „ekranem”. Bateria wytrzyma cały dzień, jeśli nie użyjesz żadnej funkcji.</p>
+  <div class="wizual-pozioma">
+    <div class="karta-wizual karta-foto">
+      <img src="https://images.unsplash.com/photo-1579586337278-3befd40fd17a?fm=jpg&q=80&w=800&auto=format&fit=crop" alt="Apple Watch">
+      <span class="etyk">Zdjęcie: Simon Daoudi / Unsplash</span>
+    </div>
+    <div class="karta-wizual karta-foto">
+      <img src="https://images.unsplash.com/photo-1580477371194-4593e3c7c6cf?fm=jpg&q=80&w=800&auto=format&fit=crop" alt="Apple Watch Ultra">
+      <span class="etyk">Zdjęcie: Nidheesh Kavalan / Unsplash</span>
+    </div>
+  </div>
+  <div class="warianty-wybor" id="war-watch">
+    <button class="wariant-chip wybrany" onclick="wybierzWariant('watch','41mm',this)">41mm</button>
+    <button class="wariant-chip" onclick="wybierzWariant('watch','49mm',this)">49mm</button>
+  </div>
+  <button class="btn-add-cart" onclick="dodajDoKoszyka('watch')">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M6 6h15l-1.5 9h-12L5 3H2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Dodaj do koszyka
+  </button>
+  <div style="margin-top:8px"><button class="cena-tag" onclick="pokazToast('Pasek: 4 śrubki, 599 zł osobno.')">Od <b>3 499 zł</b> · pasek osobno ›</button></div>
+</section>
+
+<!-- AirPods -->
+<section class="produkt" id="pSluchawki">
+  <div class="eyebrow eyebrow-logo"><span class="nav-logo"><svg viewBox="0 0 24 28"><path d="M17.5 9.3c-1.6 0-2.9 1-3.7 1-.8 0-2-1-3.3-.9-1.7.1-3.3 1-4.1 2.5-1.8 3.1-.5 7.6 1.3 10.1.9 1.2 1.9 2.6 3.3 2.6 1.3-.1 1.8-.9 3.4-.9s2 .9 3.4.9c1.4 0 2.3-1.2 3.1-2.5.6-1 1.1-2.1 1.5-3.3-3.6-1.4-4.2-6.5-.7-8.4-1-1.3-2.5-2.1-4.2-2.1zM14.6 6.6c.7-.9 1.2-2.1 1.1-3.3-1.1.1-2.3.7-3.1 1.6-.7.8-1.2 2-1.1 3.2 1.2.1 2.4-.6 3.1-1.5z"/></svg></span>AirPods Pro</div>
+  <h2>Teraz jeszcze<br>łatwiej zgubić.</h2>
+  <p class="desc">Jedna słuchawka gubi się średnio co 11 dni. Dlatego sprzedajemy je w parach — żebyś mógł kupić drugą, gdy zgubisz pierwszą, za pełną cenę pary.</p>
+  <div class="wizual-pozioma">
+    <div class="karta-wizual karta-foto">
+      <img src="https://images.unsplash.com/photo-1606741965326-cb990ae01bb2?fm=jpg&q=80&w=800&auto=format&fit=crop" alt="AirPods">
+      <span class="etyk">Zdjęcie: insung yoon / Unsplash</span>
+    </div>
+    <div class="karta-wizual"><div class="shine"></div>
+      <svg viewBox="0 0 100 80"><rect x="8" y="12" width="84" height="58" rx="18" fill="url(#aluBiale)"/><rect x="8" y="12" width="84" height="22" rx="18" fill="#fff" opacity=".5"/><rect x="14" y="18" width="72" height="46" rx="12" fill="#dcdce1"/><circle cx="50" cy="41" r="3.2" fill="#ff3b30"><animate attributeName="opacity" values="1;0.3;1" dur="1.6s" repeatCount="indefinite"/></circle></svg>
+      <span class="etyk">Etui (świeci na czerwono)</span>
+    </div>
+  </div>
+  <button class="btn-add-cart" onclick="dodajDoKoszyka('airpods')">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M6 6h15l-1.5 9h-12L5 3H2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Dodaj do koszyka
+  </button>
+  <div style="margin-top:8px"><button class="cena-tag" onclick="pokazToast('To nie błąd. To design.')">Od <b>1 299 zł</b> · dlaczego świeci na czerwono? ›</button></div>
+</section>
+
+<!-- AJAI -->
+<section class="ajai" id="ajai">
+  <div class="eyebrow">Zupełnie nowe</div>
+  <div class="ajai-orb"></div>
+  <div class="ajai-title-row">
+    <div class="nav-logo ajai-logo"><svg viewBox="0 0 24 28"><path d="M17.5 9.3c-1.6 0-2.9 1-3.7 1-.8 0-2-1-3.3-.9-1.7.1-3.3 1-4.1 2.5-1.8 3.1-.5 7.6 1.3 10.1.9 1.2 1.9 2.6 3.3 2.6 1.3-.1 1.8-.9 3.4-.9s2 .9 3.4.9c1.4 0 2.3-1.2 3.1-2.5.6-1 1.1-2.1 1.5-3.3-3.6-1.4-4.2-6.5-.7-8.4-1-1.3-2.5-2.1-4.2-2.1zM14.6 6.6c.7-.9 1.2-2.1 1.1-3.3-1.1.1-2.3.7-3.1 1.6-.7.8-1.2 2-1.1 3.2 1.2.1 2.4-.6 3.1-1.5z"/></svg></div>
+    <h2>Poznaj Apple AJAI.</h2>
+  </div>
+  <p>Sztuczna inteligencja, która rozumie Cię tak dobrze, jak każda inna sztuczna inteligencja. Wymaga internetu, chmury, i odrobiny cierpliwości.</p>
+  <div class="ajai-chat">
+    <div class="ajai-msg user">Hej Apple AJAI, ustaw budzik na 7:00</div>
+    <div class="ajai-msg ai">Przepraszam, nie mogę teraz połączyć się z serwerem. Spróbuj później.</div>
+    <div class="ajai-msg user">A teraz?</div>
+    <div class="ajai-msg ai">✨ Generuję odpowiedź w chmurze... (to może chwilę potrwać, tak jak zawsze)</div>
+  </div>
+  <button class="btn-add-cart" style="margin-top:26px;background:#7c3aed" onclick="dodajSubskrypcje()">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M6 6h15l-1.5 9h-12L5 3H2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Subskrybuj AJAI+ · 39 zł/mies.
+  </button>
+</section>
+
+<!-- FUNKCJE -->
+<section class="funkcje">
+  <h2>Rewolucyjne funkcje.<br>Które już miałeś.</h2>
+  <div class="grid-f">
+    <div class="karta-f">
+      <div class="ikon"><svg viewBox="0 0 24 24" fill="none"><path d="M6 9V4a2 2 0 012-2h8a2 2 0 012 2v5M6 9a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2M6 9h12" stroke="#f5f5f7" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h3>Wcięcie w ekranie. Ale mniejsze.</h3>
+      <p>3 lata temu było większe. Teraz jest o 15% mniejsze. To najważniejsza rzecz jaką musisz wiedzieć o tym telefonie.</p>
+      <span class="tag-cena">bezpłatnie w cenie telefonu</span>
+    </div>
+    <div class="karta-f">
+      <div class="ikon"><svg viewBox="0 0 24 24" fill="none"><path d="M9 3v4M15 3v4M6 7h12l-1 14H7L6 7z" stroke="#f5f5f7" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h3>Nowy port. Znowu.</h3>
+      <p>Zmieniliśmy port ładowania po raz trzeci w tej dekadzie. Twoje stare kable teraz nadają się na breloki.</p>
+      <span class="tag-cena">nowy kabel: 189 zł</span>
+    </div>
+    <div class="karta-f">
+      <div class="ikon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#f5f5f7" stroke-width="1.6"/><path d="M12 8v4l3 2" stroke="#f5f5f7" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+      <h3>Apple Uninteligence</h3>
+      <p>Działa w chmurze, potrzebuje internetu, i czasem nie działa. Ale ma ładną nazwę marketingową.</p>
+      <span class="tag-cena">wymaga subskrypcji</span>
+    </div>
+    <div class="karta-f">
+      <div class="ikon"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="3" stroke="#f5f5f7" stroke-width="1.6"/><circle cx="9" cy="10" r="1.4" fill="#f5f5f7"/><circle cx="15" cy="10" r="1.4" fill="#f5f5f7"/><circle cx="9" cy="15" r="1.4" fill="#f5f5f7"/></svg></div>
+      <h3>Czwarty obiektyw</h3>
+      <p>Teraz robisz zdjęcia jeszcze bardziej podobne do tych z poprzedniego telefonu, tylko że wypustka aparatu jest teraz gigantyczna.</p>
+      <span class="tag-cena">w cenie · statyw osobno</span>
+    </div>
+    <div class="karta-f">
+      <div class="ikon"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="7" width="16" height="12" rx="2" stroke="#f5f5f7" stroke-width="1.6"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke="#f5f5f7" stroke-width="1.6"/></svg></div>
+      <h3>Pamięć bazowa: 128GB</h3>
+      <p>Wciąż. Od siedmiu lat. System zajmuje 40GB. Reszta jest Twoja, ciesz się nią odpowiedzialnie.</p>
+      <span class="tag-cena">+512GB za jedyne 900 zł</span>
+    </div>
+    <div class="karta-f">
+      <div class="ikon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5 3.5 8.7 8 10 4.5-1.3 8-5 8-10V6l-8-4z" stroke="#f5f5f7" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+      <h3>Pudełko bez ładowarki</h3>
+      <p>Ratujemy planetę, usuwając rzecz która kosztuje nas 8 zł, i sprzedając Ci ją osobno za 249 zł. To dla środowiska.</p>
+      <span class="tag-cena">ładowarka: 249 zł</span>
+    </div>
+  </div>
+</section>
+
+<!-- PORÓWNAJ -->
+<section class="porownaj" id="porownaj">
+  <h2>Porównaj modele.</h2>
+  <p class="sub">Wszystkie robią to samo. Tylko cena rośnie.</p>
+  <table>
+    <tr><th>Model</th><th>Cena</th><th>Nowość</th><th>Warto?</th></tr>
+    <tr><td>iPhone 15</td><td>7 999 zł</td><td>inny kolor</td><td class="zly">już nieaktualny</td></tr>
+    <tr><td>iPhone 16</td><td>8 999 zł</td><td>port jest inny</td><td class="zly">już nieaktualny</td></tr>
+    <tr><td>iPhone Pro</td><td><b>9 999 zł</b></td><td>wcięcie mniejsze o 2mm</td><td><b>tak, kup</b></td></tr>
+    <tr><td>iPhone Pro Max</td><td><b>12 999 zł</b></td><td>ten sam telefon, ale "Max"</td><td><b>jeszcze bardziej tak</b></td></tr>
+  </table>
+</section>
+
+<footer>
+  <div class="gwiazdki">
+    * Cena nie zawiera ładowarki, kabla, etui, folii, ochrony rozszerzonej, subskrypcji Apple Uninteligence, podatku od bycia zafascynowanym, oraz poczucia że Twój poprzedni telefon nagle działa wolniej.<br><br>
+    ** "Unnovation" oznacza: zrobione tak samo jak w zeszłym roku, ale droższe.<br><br>
+    *** Apple AJAI czasem odpowiada. Wyniki mogą się różnić w zależności od tego, czy chmura akurat działa.
+  </div>
+  <div class="marka-wrap">
+    <div class="nav-logo"><svg viewBox="0 0 24 28"><path d="M17.5 9.3c-1.6 0-2.9 1-3.7 1-.8 0-2-1-3.3-.9-1.7.1-3.3 1-4.1 2.5-1.8 3.1-.5 7.6 1.3 10.1.9 1.2 1.9 2.6 3.3 2.6 1.3-.1 1.8-.9 3.4-.9s2 .9 3.4.9c1.4 0 2.3-1.2 3.1-2.5.6-1 1.1-2.1 1.5-3.3-3.6-1.4-4.2-6.5-.7-8.4-1-1.3-2.5-2.1-4.2-2.1zM14.6 6.6c.7-.9 1.2-2.1 1.1-3.3-1.1.1-2.3.7-3.1 1.6-.7.8-1.2 2-1.1 3.2 1.2.1 2.4-.6 3.1-1.5z"/></svg></div>
+    <div class="marka">Apple Unnovation Inc.</div>
+  </div>
+  <div>Zaprojektowane w jednym kraju, złożone w innym, opłacone przez Ciebie.</div>
+</footer>
+
+<script>
+function scrollTo(id) {
+  document.getElementById(id).scrollIntoView({ behavior: 'smooth' })
+}
+
+let toastTimer = null
+function pokazToast(tekst) {
+  const t = document.getElementById('toast')
+  document.getElementById('toast-tekst').textContent = tekst
+  t.classList.add('pokaz')
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => t.classList.remove('pokaz'), 3000)
+}
+</script>
+
+<!-- PANEL KOSZYKA -->
+<div id="cart-overlay" onclick="if(event.target===this) zamknijKoszyk()">
+  <div id="cart-panel">
+    <div class="cart-head">
+      <h3>Koszyk</h3>
+      <button class="cart-close" onclick="zamknijKoszyk()"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="cart-body" id="cart-body"></div>
+    <div class="cart-foot" id="cart-foot" style="display:none">
+      <div class="cart-line"><span>Produkty</span><span id="sum-produkty">0 zł</span></div>
+      <div class="cart-line"><span>Subskrypcje / mies.</span><span id="sum-subskrypcje">0 zł</span></div>
+      <div class="cart-line total"><span>Razem dziś</span><span id="sum-total">0 zł</span></div>
+      <button class="cart-checkout-btn" onclick="otworzPlatnosc()">Przejdź do płatności</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PŁATNOŚCI -->
+<div id="pay-overlay" onclick="if(event.target===this) zamknijPlatnosc()">
+  <div id="pay-modal">
+    <button class="pay-close" onclick="zamknijPlatnosc()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div id="pay-content">
+      <h3>Wybierz metodę płatności</h3>
+      <div class="pay-sub">Wybierz bank, przez który (rzekomo) zapłacisz</div>
+      <div class="bank-lista" id="bank-lista"></div>
+      <div class="pay-summary">
+        <div class="cart-line"><span>Produkty</span><span id="pay-sum-produkty">0 zł</span></div>
+        <div class="cart-line"><span>Subskrypcje / mies.</span><span id="pay-sum-subskrypcje">0 zł</span></div>
+        <div class="cart-line total"><span>Do zapłaty dziś</span><span id="pay-sum-total">0 zł</span></div>
+      </div>
+      <button class="btn-final-pay" id="btn-final-pay" disabled onclick="finalizujPlatnosc()">Wybierz bank, żeby zapłacić</button>
+    </div>
+  </div>
+</div>
+
+<script src="cart.js"></script>
+</body>
+</html>
